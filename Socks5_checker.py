@@ -259,7 +259,7 @@ def main():
  parser = argparse.ArgumentParser(description="Check SOCKS5 proxies from CSV files.")
  parser.add_argument("-i", "--input", help="Single input CSV file (overrides folder)")
  parser.add_argument("--speed", type=int, help="Max speed in ms for proxy-behind-proxy")
- parser.add_argument("--cc", help="Country code (e.g., MA)")
+ parser.add_argument("--cc", help="Country code")
  parser.add_argument("--mode", choices=["normal", "stealth"], default="normal", help="Mode: normal or stealth")
  parser.add_argument("--v", choices=["log"], help="Verbose mode with logging to file (use --v=log)")
  parser.add_argument("--isblacklisted", action="store_true", help="Log blacklisted proxies")
