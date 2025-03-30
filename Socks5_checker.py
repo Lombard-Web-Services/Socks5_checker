@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # By thibaut LOMBARD (Lombard Web)
 # Socks5 Proxy checker 
-# Features : blacklist, mutiples csv inputs, verbose, stealth mode
+# Features : denylist, mutiples csv inputs, verbose, stealth mode
 import os
 import csv
 import socket
@@ -18,7 +18,7 @@ from pathlib import Path
 # Constants
 SOCKS5_FOLDER = "socks5"
 INC_FOLDER = "inc"
-BLACKLIST_FILE = "blacklist.csv"
+BLACKLIST_FILE = "denylist.csv"
 GEOIP_URLS = {
  "GeoLite2-Country.mmdb": "https://git.io/GeoLite2-Country.mmdb",
  "GeoLite2-City.mmdb": "https://git.io/GeoLite2-City.mmdb",
@@ -58,9 +58,9 @@ def download_geoip_databases(verbose=False, log_file=None):
     print(f"Failed to download {db_name}: {e}")
     sys.exit(1)
 
-# Load blacklist IPs and ranges
-def load_blacklist(verbose=False, log_file=None):
- blacklist = []
+# Load denylist IPs and ranges
+def load_denylist(verbose=False, log_file=None):
+ denylist = []
  if os.path.exists(BLACKLIST_FILE):
   with open(BLACKLIST_FILE, "r", encoding="utf-8") as f:
    reader = csv.reader(f, delimiter=";")
@@ -68,32 +68,32 @@ def load_blacklist(verbose=False, log_file=None):
    for row in reader:
     if len(row) > 0:
      ip_range = row[0].strip()
-     verbose_print(f"Processing blacklist entry: {ip_range}", verbose, log_file)
+     verbose_print(f"Processing denylist entry: {ip_range}", verbose, log_file)
      try:
       if "0/255" in ip_range:
        cidr = ip_range.replace("0/255.0/255", "0.0/16")
       else:
        cidr = ip_range
       network = ipaddress.ip_network(cidr, strict=False)
-      blacklist.append(network)
+      denylist.append(network)
       verbose_print(f"Added network: {network}", verbose, log_file)
      except ValueError as e:
-      verbose_print(f"Invalid blacklist entry {ip_range}: {e}", verbose, log_file)
- verbose_print(f"Loaded {len(blacklist)} blacklist networks", verbose, log_file)
- return blacklist
+      verbose_print(f"Invalid denylist entry {ip_range}: {e}", verbose, log_file)
+ verbose_print(f"Loaded {len(denylist)} denylist networks", verbose, log_file)
+ return denylist
 
-# Check if IP is in blacklist
-def is_blacklisted(ip, blacklist, verbose=False, log_file=None):
+# Check if IP is in denylist
+def is_denylisted(ip, denylist, verbose=False, log_file=None):
  try:
   ip_addr = ipaddress.ip_address(ip)
-  for network in blacklist:
+  for network in denylist:
    if ip_addr in network:
-    verbose_print(f"{ip} is in blacklisted range {network}", verbose, log_file)
+    verbose_print(f"{ip} is in denylisted range {network}", verbose, log_file)
     return True
-  verbose_print(f"{ip} not in blacklist", verbose, log_file)
+  verbose_print(f"{ip} not in denylist", verbose, log_file)
   return False
  except ValueError:
-  verbose_print(f"Invalid IP format for blacklist check: {ip}", verbose, log_file)
+  verbose_print(f"Invalid IP format for denylist check: {ip}", verbose, log_file)
   return False
 
 # Get GeoIP info (country, city, ASN)
@@ -224,16 +224,16 @@ def append_result_to_csv(result, csv_file):
    writer.writerow(headers)
   writer.writerow(result)
 
-# Main checking function with incremental CSV updates and blacklisted logging
-def check_proxies(proxies, blacklist, csv_file, blacklisted_log=None, proxy=None, verbose=False, log_file=None):
+# Main checking function with incremental CSV updates and denylisted logging
+def check_proxies(proxies, denylist, csv_file, denylisted_log=None, proxy=None, verbose=False, log_file=None):
  results = []
- blacklisted = []
+ denylisted = []
  total = len(proxies)
  for i, entry in enumerate(proxies, 1):
   ip, port = entry["ip"], entry["port"]
-  if is_blacklisted(ip, blacklist, verbose, log_file):
-   print(f"[{i}/{total}] Skipping blacklisted IP: {ip}")
-   blacklisted.append(f"{ip}:{port}")
+  if is_denylisted(ip, denylist, verbose, log_file):
+   print(f"[{i}/{total}] Skipping denylisted IP: {ip}")
+   denylisted.append(f"{ip}:{port}")
    continue
 
   country, city, asn = get_geoip_info(ip, verbose, log_file)
@@ -247,11 +247,11 @@ def check_proxies(proxies, blacklist, csv_file, blacklisted_log=None, proxy=None
    results.append(result)
    verbose_print(f"Added working proxy to {csv_file}: {ip}:{port}", verbose, log_file)
 
- if blacklisted_log and blacklisted:
-  with open(blacklisted_log, "w", encoding="utf-8") as f:
+ if denylisted_log and denylisted:
+  with open(denylisted_log, "w", encoding="utf-8") as f:
    f.write("Blacklisted Proxies:\n")
-   f.write("\n".join(blacklisted))
-  print(f"Saved {len(blacklisted)} blacklisted proxies to {blacklisted_log}")
+   f.write("\n".join(denylisted))
+  print(f"Saved {len(denylisted)} denylisted proxies to {denylisted_log}")
  return results
 
 # Main execution
@@ -262,7 +262,7 @@ def main():
  parser.add_argument("--cc", help="Country code")
  parser.add_argument("--mode", choices=["normal", "stealth"], default="normal", help="Mode: normal or stealth")
  parser.add_argument("--v", choices=["log"], help="Verbose mode with logging to file (use --v=log)")
- parser.add_argument("--isblacklisted", action="store_true", help="Log blacklisted proxies")
+ parser.add_argument("--isdenylisted", action="store_true", help="Log denylisted proxies")
  args = parser.parse_args()
 
  # Setup logging
@@ -277,8 +277,8 @@ def main():
  # Download GeoIP databases
  download_geoip_databases(verbose, log_file)
 
- # Load blacklist
- blacklist = load_blacklist(verbose, log_file)
+ # Load denylist
+ denylist = load_denylist(verbose, log_file)
 
  # Load proxies
  if args.input:
@@ -322,8 +322,8 @@ def main():
 
  # Check proxies with incremental CSV updates
  csv_file = generate_timestamped_filename("result") + ".csv"
- blacklisted_log = generate_timestamped_filename("blacklisted") + ".log" if args.isblacklisted else None
- results = check_proxies(proxies, blacklist, csv_file, blacklisted_log, proxy, verbose, log_file)
+ denylisted_log = generate_timestamped_filename("denylisted") + ".log" if args.isdenylisted else None
+ results = check_proxies(proxies, denylist, csv_file, denylisted_log, proxy, verbose, log_file)
  print(f"Finished checking. Results saved incrementally to {csv_file}")
 
 if __name__ == "__main__":
