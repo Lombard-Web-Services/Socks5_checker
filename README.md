@@ -1,5 +1,5 @@
 # Socks5_checker
-Socks5 Proxy checker in python , for data scraping with anonimity, this program MUST be used carefully regarding the law in vigor into you country.
+Socks5 Proxy checker in python , for data scraping with high level of anonymity, this program MUST be used carefully regarding the law in vigor into you country.
 
 ## Features
 This program is for educational use only, it supports  blacklist, mutiples csv inputs, and stealth mode (proxy whith proxy), support for CIDR format for blacklist.
