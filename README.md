@@ -22,7 +22,7 @@ Non verbose mode :
 ```sh
 ./Socks5_checker.py
 ```
-Verbose mode and check if a blackliste:
+Verbose mode and check if a  scanned ip is blacklisted:
 ```sh
 ./Socks5_checker.py --v=log --isblacklisted
 ```
