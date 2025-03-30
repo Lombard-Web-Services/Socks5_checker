@@ -6,7 +6,7 @@ This program is for educational use only, it supports  blacklist, mutiples csv i
 
 ## Installation
 * Create the folder inc/ and socks5/,
-* put your csv containing your IP socks 5 into the socks5/ directory (csv must contains IP;Ports columns or IP:Ports format in the first field)
+* put your csv containing your IP socks 5 into the socks5/ directory (csv must contains IP;Port columns and field at first or IP:Port format in the first field)
 * put your blacklist.csv file at the root of the script in the working directory
 * start the script with python ./socks5.py
 
